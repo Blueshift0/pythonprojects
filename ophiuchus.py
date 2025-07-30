@@ -9,9 +9,9 @@ planets = {
     'Ceres': (2.552, 2.978, 73.597, 80.393, 10.593),
     'Jupiter': (4.950, 5.457, 273.867, 100.556, 1.303),
     'Saturn': (9.041, 10.124, 339.392, 113.665, 2.489),
-    'Caelus': (18.375, 20.063, 96.998, 74.006, 0.773),
+    'Uranus': (18.375, 20.063, 96.998, 74.006, 0.773),
     'Neptune': (29.767, 30.441, 273.249, 131.784, 1.770),
-    'Fortuna': (266.122, 494.029, 344.493, 1.601, 0.993)
+    'Fortuna': (266.122, 494.029, 344.493, 1.601, 0.993),
 }
 
 def distancebetween(a, b):
@@ -24,11 +24,29 @@ def orbitaldistance(peri, apo, ecc, theta):
     return (((peri + apo) / 2) * (1 - (ecc ** 2))) / (1 + ecc * math.cos(theta))
 
 def findposition(dist, argperi, longasc, inc, anomaly):
-    xplane = dist * math.cos(math.radians(argperi) + math.radians(anomaly))
-    yplane = dist * math.sin(math.radians(argperi) + math.radians(anomaly))
-    x = xplane * math.cos(math.radians(longasc)) - yplane * math.cos(math.radians(inc)) * math.sin(math.radians(longasc))
-    y = yplane * math.sin(math.radians(longasc)) + yplane * math.cos(math.radians(inc)) * math.cos(math.radians(longasc))
-    z = yplane * math.sin(math.radians(inc))
+    argperi = math.radians(argperi)
+    longasc = math.radians(longasc)
+    inc = math.radians(inc)
+    anomaly = math.radians(anomaly)
+
+    # True anomaly + argument of periapsis
+    theta = anomaly + argperi
+
+    # Position in orbital plane
+    x_orb = dist * math.cos(theta)
+    y_orb = dist * math.sin(theta)
+    z_orb = 0
+
+    # Rotate by inclination
+    x1 = x_orb
+    y1 = y_orb * math.cos(inc)
+    z1 = y_orb * math.sin(inc)
+
+    # Rotate by longitude of ascending node
+    x = x1 * math.cos(longasc) - y1 * math.sin(longasc)
+    y = x1 * math.sin(longasc) + y1 * math.cos(longasc)
+    z = z1
+
     return (x, y, z)
 
 def finddistances(a, b):
@@ -44,12 +62,12 @@ def finddistances(a, b):
         for anomaly2 in range(0, 360, 5):
             rad2 = orbitaldistance(peri2, apo2, ecc2, anomaly2)
             pos2 = findposition(rad2, argperi2, longasc2, inc2, anomaly2)
-            dist = distancebetween(pos1, pos2) 
+            dist = distancebetween(pos1, pos2)  
             if dist < min_dist:
                 min_dist = dist
             if dist > max_dist:
                 max_dist = dist
-        return (min_dist, max_dist)
+    return (min_dist, max_dist)
 
 def format_time(seconds):
     days = seconds // 86400
